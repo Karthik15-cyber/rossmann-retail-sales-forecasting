@@ -1,260 +1,275 @@
-Rossmann Retail Sales Forecasting
+# Rossmann Retail Sales Forecasting
 
-Project Overview
+## Project Overview
 
-This project builds a machine learning solution to forecast daily salesfor Rossmann retail stores using historical sales, storecharacteristics, promotions, competition information, holidays, andcalendar-based features.
+This project builds a machine learning solution to forecast daily sales for Rossmann retail stores using historical sales, store characteristics, promotions, competition information, holidays, and calendar-based features.
 
-The project focuses on a realistic forecasting workflow: exploratorydata analysis, feature engineering, chronological validation, modelcomparison, hyperparameter tuning, error analysis, feature importance,and model persistence.
+The project follows an end-to-end machine learning workflow including exploratory data analysis, feature engineering, chronological validation, model comparison, hyperparameter tuning, error analysis, feature importance, and model persistence.
 
-The final model is a tuned XGBoost Regressor, which achieved an R²score of 0.8814 and RMSPE of 18.27% on the chronologicalvalidation period.
+The final model is a tuned **XGBoost Regressor**, which achieved an **R² score of 0.8814** and **RMSPE of 18.27%** on the chronological validation period.
 
-Business Problem
+---
 
-Retail stores need reliable demand forecasts to support decisionsrelated to inventory, staffing, promotions, and store operations.
+## Business Problem
 
-The objective of this project is to use historical Rossmann store datato predict daily store sales while accounting for factors such as:
+Retail stores require reliable sales forecasts to support decisions related to:
 
-Store characteristics
+- Inventory planning
+- Staffing
+- Promotional strategies
+- Store operations
+- Demand planning
 
-Promotions
+The objective of this project is to predict daily Rossmann store sales using historical store and sales information.
 
-State and school holidays
+The target variable is:
 
-Competition
+**Sales**
 
-Promo2 participation
+---
 
-Calendar and seasonal information
+## Dataset
 
-The target variable is Sales.
+The project uses the Rossmann Store Sales dataset.
 
-Dataset
+The main files used are:
 
-The project uses the Rossmann Store Sales data, primarily:
+- `train.csv` — historical daily store observations containing the target `Sales`
+- `store.csv` — store-level information including store type, assortment, competition, and Promo2 information
 
-train.csv --- historical daily store observations including thetarget Sales
+> **Note:** `train.csv` is not included in this repository because of its large file size. It must be downloaded separately and placed in the working directory before running the notebook.
 
-store.csv --- store-level information such as store type,assortment, competition, and Promo2 details
+The sales and store datasets are merged before exploratory analysis and model development.
 
-train.csv is not included in this repository because of its file size.Place the dataset in the working directory before running the notebook.
+---
 
-The modeling notebook merges the historical sales data with thestore-level information before analysis and feature engineering.
+## Project Workflow
 
-Project Workflow
+The project follows the workflow below:
 
-Data loading and inspection
+1. Data Loading and Inspection
+2. Data Cleaning
+3. Missing Value Treatment
+4. Dataset Merging
+5. Exploratory Data Analysis
+6. Feature Engineering
+7. Chronological Train-Validation Split
+8. Removal of Closed Stores from Model Training
+9. Categorical Encoding using ColumnTransformer
+10. Baseline Model
+11. Linear Regression
+12. Random Forest Regressor
+13. XGBoost Regressor
+14. XGBoost Hyperparameter Tuning
+15. Model Evaluation
+16. Error Analysis
+17. Feature Importance Analysis
+18. Train vs Validation Performance Analysis
+19. Final Model Saving
 
-Data cleaning and missing-value treatment
+---
 
-Merge sales and store datasets
+## Exploratory Data Analysis
 
-Exploratory data analysis
+EDA was performed to understand the relationship between sales and important retail factors such as:
 
-Feature engineering
+- Customer footfall
+- Promotions
+- Day of week
+- Store type
+- Assortment
+- State holidays
+- School holidays
+- Competition distance
+- Monthly sales trends
+- Monthly customer trends
 
-Chronological train-validation split
+Customer footfall showed a strong positive relationship with sales.
 
-Removal of closed-store observations from model training
+However, the `Customers` feature was excluded from the forecasting model because future customer counts would not normally be available at prediction time.
 
-Categorical preprocessing using ColumnTransformer andOneHotEncoder
+---
 
-Baseline model evaluation
+## Feature Engineering
 
-Linear Regression
+Several new features were created from the available date, competition, and promotional information.
 
-Random Forest Regressor
+### Calendar Features
 
-XGBoost Regressor
+- `Year`
+- `Month`
+- `Day`
+- `WeekOfYear`
+- `Quarter`
+- `IsWeekend`
 
-XGBoost hyperparameter tuning using RandomizedSearchCV andTimeSeriesSplit
+### Competition Features
 
-Final model evaluation
+- `CompetitionInfoMissing`
+- `CompetitionMonths`
 
-Error analysis
+### Promo2 Features
 
-Feature importance analysis
+- `Promo2Months`
+- `Promo2ThisMonth`
 
-Train-vs-validation generalization check
+The original date and selected source columns used to generate these features were removed before model training.
 
-Save the final preprocessing + XGBoost pipeline
+---
 
-Exploratory Data Analysis
+## Validation Strategy
 
-The EDA investigates relationships between sales and important retailfactors such as:
+Since this is a forecasting problem, a **chronological validation split** was used instead of a random train-test split.
 
-Customer footfall
+Historical observations were used for training while a later period was reserved for validation.
 
-Promotions
+This approach better represents a real forecasting scenario:
 
-Day of week
+**Past Data → Train Model → Predict Future Sales**
 
-Store type
+Closed-store observations were removed from model training because their sales are structurally zero and do not represent normal open-store demand.
 
-Assortment
+---
 
-State holidays
+## Data Preprocessing
 
-School holidays
+Categorical variables were encoded using:
 
-Competition distance
+- `ColumnTransformer`
+- `OneHotEncoder`
 
-Monthly sales and customer trends
+The preprocessing step was combined with the machine learning models using Scikit-learn pipelines.
 
-Customer footfall shows a strong relationship with sales, but theCustomers feature is excluded from the forecasting model becausefuture customer counts would not normally be known at prediction time.
+Tree-based models such as Random Forest and XGBoost did not require numerical feature scaling.
 
-Feature Engineering
+---
 
-Several features are created from the raw date, competition, andpromotional information, including:
+## Models Evaluated
 
-Year
+The following models were evaluated:
 
-Month
+- Mean Sales Baseline
+- Linear Regression
+- Random Forest Regressor
+- XGBoost Regressor
+- Tuned XGBoost Regressor
 
-Day
+---
 
-WeekOfYear
+## Model Performance
 
-Quarter
+| Model | MAE | RMSE | RMSPE | R² |
+|---|---:|---:|---:|---:|
+| Mean Baseline | 2278.55 | 3118.90 | 55.66% | -0.0050 |
+| Linear Regression | 1974.47 | 2677.64 | 48.50% | 0.2593 |
+| Random Forest | 954.25 | 1404.00 | 20.37% | 0.7963 |
+| XGBoost | 868.52 | 1180.36 | 20.45% | 0.8561 |
+| **Tuned XGBoost** | **789.94** | **1071.64** | **18.27%** | **0.8814** |
 
-IsWeekend
+The tuned XGBoost model achieved the strongest overall validation performance and was selected as the final model.
 
-CompetitionInfoMissing
+---
 
-CompetitionMonths
+## XGBoost Hyperparameter Tuning
 
-Promo2Months
+XGBoost was tuned using:
 
-Promo2ThisMonth
+- `RandomizedSearchCV`
+- `TimeSeriesSplit`
 
-The raw Date field and selected source columns used to construct theseengineered features are removed before modeling.
+Time-aware cross-validation was used to preserve the chronological nature of the forecasting problem.
 
-Validation Strategy
+### Best Parameters
 
-A chronological validation split is used instead of a randomtrain-test split.
-
-Historical observations are used for training, while the later period isheld out for validation. This better represents the real forecastingscenario in which a model is trained on past information and evaluatedon future observations.
-
-Closed-store rows are excluded from model training because their salesare structurally zero and do not represent normal open-store demand.
-
-Models Evaluated
-
-The following approaches were compared:
-
-Mean Sales Baseline
-
-Linear Regression
-
-Random Forest Regressor
-
-XGBoost Regressor
-
-Tuned XGBoost Regressor
-
-Validation Performance
-
-Model                   MAE           RMSE          RMSPE             R²
-
-Mean                2278.55        3118.90         55.66%        -0.0050Baseline
-
-Linear              1974.47        2677.64         48.50%         0.2593Regression
-
-Random               954.25        1404.00         20.37%         0.7963Forest
-
-XGBoost              868.52        1180.36         20.45%         0.8561
-
-The tuned XGBoost model produced the strongest overall validationperformance and was selected as the final model.
-
-Final XGBoost Performance
-
-Training
-
-Metric      Score
-
-MAE        475.50RMSE       682.02RMSPE      18.28%R²         0.9517
-
-Validation
-
-Metric       Score
-
-MAE         789.94RMSE       1071.64RMSPE       18.27%R²          0.8814
-
-The model fits the training data more strongly than the validation data,producing a moderate train-validation gap in R². However, it retainsstrong performance on the later chronological validation period.
-
-Hyperparameter Tuning
-
-XGBoost was tuned using RandomizedSearchCV with TimeSeriesSplit topreserve the temporal nature of the forecasting problem.
-
-Best parameters obtained in the notebook:
-
+```text
 subsample = 1.0
 n_estimators = 700
 min_child_weight = 5
 max_depth = 8
 learning_rate = 0.1
 colsample_bytree = 0.8
+```
 
-Feature Importance
+---
 
-Feature-importance analysis indicates that store characteristics,promotional variables, competition information, store identity, andassortment contribute strongly to the model's predictions.
+## Final Model Performance
 
-Important features include:
+### Training Performance
 
-Store type
+| Metric | Score |
+|---|---:|
+| MAE | 475.50 |
+| RMSE | 682.02 |
+| RMSPE | 18.28% |
+| R² | 0.9517 |
 
-Promo
+### Validation Performance
 
-Promo2
+| Metric | Score |
+|---|---:|
+| MAE | 789.94 |
+| RMSE | 1071.64 |
+| RMSPE | 18.27% |
+| R² | 0.8814 |
 
-Competition distance
+The model performs better on the training data than on the validation period, resulting in a moderate train-validation gap.
 
-Store
+However, the tuned XGBoost model maintains strong performance on unseen future-period observations and achieved the best validation performance among the evaluated models.
 
-Assortment
+---
 
-Day of week
+## Feature Importance
 
-Competition-related features
+Feature importance analysis was performed on the final XGBoost model.
 
-Feature importance represents predictive usefulness, not causalimpact.
+Some of the most influential features included:
 
-Error Analysis
+- Store Type
+- Promo
+- Promo2
+- Competition Distance
+- Store
+- Assortment
+- Day of Week
+- Competition-related features
+
+These importance values represent the features' **predictive usefulness to the model** and should not be interpreted as causal relationships.
+
+---
+
+## Error Analysis
 
 Prediction errors were analyzed using:
 
-Mean error
+- Mean Error
+- Median Error
+- Mean Absolute Error
+- Largest Absolute Errors
+- Actual vs Predicted Sales
 
-Median error
+The analysis showed that some unusually high-sales observations generated significantly larger prediction errors than typical observations.
 
-Mean absolute error
+This helps identify situations where the forecasting model may have greater difficulty.
 
-Largest absolute prediction errors
+---
 
-Actual vs. predicted sales comparisons
+## Technologies Used
 
-The analysis showed that some unusually high-sales observations producesubstantially larger absolute errors than typical observations.
+- Python
+- Pandas
+- NumPy
+- Matplotlib
+- Seaborn
+- Scikit-learn
+- XGBoost
+- Joblib
+- Jupyter Notebook / Google Colab
 
-Technologies Used
+---
 
-Python
+## Repository Structure
 
-Pandas
-
-NumPy
-
-Matplotlib
-
-Seaborn
-
-Scikit-learn
-
-XGBoost
-
-Joblib
-
-Jupyter / Google Colab
-
-Repository Structure
-
+```text
 rossmann-retail-sales-forecasting/
 │
 ├── README.md
@@ -263,61 +278,105 @@ rossmann-retail-sales-forecasting/
 ├── rossmann_xgboost_pipeline.pkl
 ├── requirements.txt
 └── .gitignore
+```
 
-train.csv is intentionally excluded because of its size.
+`train.csv` is intentionally excluded because of its file size.
 
-Installation
+---
 
-Clone the repository and install the required Python packages:
+## Installation
 
+Clone the repository:
+
+```bash
+git clone <your-repository-url>
+```
+
+Navigate to the project directory:
+
+```bash
+cd rossmann-retail-sales-forecasting
+```
+
+Install the required libraries:
+
+```bash
 pip install -r requirements.txt
+```
 
-Place train.csv in the same location expected by the notebook, thenopen:
+Download `train.csv` and place it in the location expected by the notebook.
 
+Then open:
+
+```text
 Rossmann_Retail_Sales_Forecasting.ipynb
+```
 
-Run the notebook from top to bottom.
+and run the notebook from top to bottom.
 
-Saved Model
+---
+
+## Saved Model
 
 The final trained model is saved as:
 
+```text
 rossmann_xgboost_pipeline.pkl
+```
 
-The saved object contains the categorical preprocessing stage and thetrained XGBoost model.
+The saved pipeline contains:
 
-Note: Feature engineering such as date, competition-duration, andPromo2-duration feature creation is performed separately in the notebookbefore data is passed to the saved pipeline.
+**Categorical Preprocessing → XGBoost Regressor**
 
-Limitations
+### Important
 
-The final model is evaluated using a chronological holdout periodrather than future ground-truth sales outside the historicaltraining dataset.
+Feature engineering such as:
 
-Customer count is excluded because it would not normally beavailable when forecasting future sales.
+- Date features
+- Competition duration
+- Promo2 duration
+- Promo2 activity
 
-Extreme sales observations can produce substantially larger forecasterrors.
+is performed separately in the notebook before the data is passed to the saved pipeline.
 
-Feature importance should not be interpreted as evidence ofcausality.
+Therefore, the saved model expects **feature-engineered input data rather than completely raw Rossmann records**.
 
-The saved model pipeline expects feature-engineered inputs ratherthan completely raw Rossmann records.
+---
 
-Future Improvements
+## Limitations
 
-Potential extensions include:
+- The model was evaluated using a chronological historical validation period rather than future ground-truth sales outside the provided historical dataset.
+- Customer count was excluded because it would not normally be available when forecasting future sales.
+- Extreme sales observations can produce substantially larger prediction errors.
+- Feature importance represents predictive usefulness rather than causality.
+- Feature engineering is currently performed outside the saved model pipeline.
 
-Rolling or multiple-window backtesting
+---
 
-Automated raw-data feature engineering inside the productionpipeline
+## Future Improvements
 
-Additional lag and rolling sales features with strict leakagecontrols
+Potential improvements include:
 
-Model monitoring and retraining workflows
+- Multiple-window or rolling backtesting
+- Automated feature engineering within the prediction pipeline
+- Lag and rolling sales features with strict leakage prevention
+- Additional model experimentation
+- Model monitoring and retraining
+- Deployment as a retail sales forecasting application
 
-A lightweight forecasting application for business users
+---
 
-Conclusion
+## Conclusion
 
-The project demonstrates an end-to-end retail sales forecasting workflowusing machine learning and time-aware validation.
+This project demonstrates an end-to-end machine learning workflow for retail sales forecasting using the Rossmann Store Sales dataset.
 
-Tree-based models substantially outperformed the linear baseline, andhyperparameter tuning further improved XGBoost. The final tuned XGBoostmodel achieved MAE = 789.94, RMSE = 1071.64, RMSPE = 18.27%,and R² = 0.8814 on the chronological validation period.
+A chronological validation strategy was used to simulate forecasting future sales. Linear Regression, Random Forest, and XGBoost were compared against a baseline model.
 
-The project highlights practical skills in data cleaning, exploratoryanalysis, feature engineering, regression modeling, model evaluation,hyperparameter tuning, interpretation, and reproducible model saving.
+The **Tuned XGBoost Regressor** achieved the best validation performance:
+
+- **MAE:** 789.94
+- **RMSE:** 1071.64
+- **RMSPE:** 18.27%
+- **R²:** 0.8814
+
+The project demonstrates practical skills in **data cleaning, exploratory data analysis, feature engineering, regression modeling, time-aware validation, hyperparameter tuning, model evaluation, error analysis, feature interpretation, and model persistence**.
